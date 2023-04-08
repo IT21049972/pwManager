@@ -107,6 +107,11 @@ def firstScreen():
             hashedPasswords = hashPassword(txt.get().encode("utf-8"))
 
             key = str(uuid.uuid4().hex)
+            print(key)
+            file = open("key.txt", "w")
+            file.write("Recovery Key: " + key)
+            file.close
+
             recoveryKey = hashPassword(key.encode('utf-8'))
 
             global encryptionKey
@@ -361,7 +366,7 @@ def passwordVault():
         btn = ctk.CTkButton(window, text="Submit",width=50, command=checkBreach)
         btn.pack(pady=10)
 
-        btn = ctk.CTkButton(window, text="back",width=50, command=passwordVault)
+        btn = ctk.CTkButton(window, text=" << back",width=50, command=passwordVault)
         btn.pack(pady=10)
 
         #wbsite = txt.get()
@@ -369,10 +374,7 @@ def passwordVault():
         #passwrd = txt2.get()
 
 
-
        #passwordVault()
-
-
 
 
     def removeEntry(input):
@@ -450,8 +452,11 @@ def passwordVault():
             lbl = ctk.CTkLabel(window, text=(decrypt(array[i][3], encryptionKey)), font=("Helvetica", 14))
             lbl.grid(column=2, row=(i+3), padx=(0, 20))
 
+            #btn = ctk.CTkButton(window, text="edit", width=50, command=partial(editEntry, array[i][0]))
+            #btn.grid(column=4, row=i + 3, pady=20, padx=(0, 5))
+
             btn = ctk.CTkButton(window, text="Delete",width=50, command= partial(removeEntry,array[i][0]))
-            btn.grid(column=4, row=i+3, pady=20, padx=(0, 5))
+            btn.grid(column=5, row=i+3, pady=20, padx=(0, 5))
 
            # btn = Button(window, text="Edit", command= partial(removeEntry,array[i][0]))
             #btn.grid(column=5, row=i+3, pady=20)
