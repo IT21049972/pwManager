@@ -115,6 +115,7 @@ def firstScreen():
             recoveryKey = hashPassword(key.encode('utf-8'))
 
             global encryptionKey
+           # x="Abcd1234"
             encryptionKey = base64.urlsafe_b64encode(kdf.derive(txt.get().encode()))
 
             insert_password = """INSERT INTO masterpassword(password, recoveryKey) VALUES(?, ?) """
@@ -222,20 +223,11 @@ def loginScreen():
 
     def getMasterPassword():
         checkHashedPassword = hashPassword(txt.get().encode("utf-8"))
-
-        backend = default_backend()
-        salt = b'233'
-
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256,
-            length=32,
-            salt=salt,
-            iterations=100000,
-            backend=backend
-        )
-
         global encryptionKey
+        #test="testt"
+        #encryptionKey = base64.urlsafe_b64encode(kdf.derive(test.encode()))
         encryptionKey = base64.urlsafe_b64encode(kdf.derive(txt.get().encode()))
+        print(encryptionKey)
        # kdf.reset()  # Reset the kdf instance before deriving a new key
 
         cursor.execute("SELECT * FROM masterpassword where id=1 AND password= ?", [(checkHashedPassword)])
@@ -264,8 +256,8 @@ def loginScreen():
     btn = ctk.CTkButton(window, text="Submit", command=checkPassword)
     btn.pack(pady=10)
 
-    btn = ctk.CTkButton(window, text="Reset",width=50, command=resetPassword)
-    btn.pack(pady=10)
+   # btn = ctk.CTkButton(window, text="Reset",width=50, command=resetPassword)
+    #btn.pack(pady=10)
 
 
 def passwordVault():
@@ -357,7 +349,7 @@ def passwordVault():
                else:
                    insert()
            except requests.exceptions.RequestException as e:
-            # Handle network connection issues here
+             #network con issuee
             messagebox.showerror("Error", "Error connecting to API: {str(e)}")
 
         btn = ctk.CTkButton(window, text="generate password", command=gen_pass)
@@ -403,10 +395,10 @@ def passwordVault():
 
             # check the user's response and display a message accordingly
             if result == True:
-                for widget in window.winfo_children():  # when we switch from the loginscreen function to the password vault function
-                    widget.destroy()
+               # for widget in window.winfo_children():  # when we switch from the loginscreen function to the password vault function
+                #    widget.destroy()
                # loginScreen()
-                window.after(1000, loginScreen) #window.destroy)
+                window.after(1000,  loginScreen())
                # loginScreen()
 
                 #result == False
@@ -418,6 +410,53 @@ def passwordVault():
                 #messagebox.showinfo("Result", "You clicked No!")
 
     #  loginScreen()
+
+    def editEntry(idd):
+        window.geometry("350x200")
+        for widget in window.winfo_children():  # when we switch from the loginscreen function to the password vault function
+            widget.destroy()
+
+        lbl = Label(window, text="Website")
+        lbl.config(anchor=CENTER)
+        lbl.pack()
+
+        txt = Entry(window, width=20)
+        txt.pack()
+        txt.focus()
+
+        lbl1 = Label(window, text="Username")
+        lbl1.pack(pady=5)
+
+        txt1 = Entry(window, width=20)
+        txt1.pack()
+        txt1.focus()
+
+        lbl2 = Label(window, text="Password")
+        lbl2.pack(pady=5)
+
+        txt2 = Entry(window, width=20)
+        txt2.pack()
+        txt2.focus()
+
+        lbl3 = Label(window)
+        lbl3.pack()
+
+        def update():
+            website = encrypt(txt.get().encode(), encryptionKey)
+            username = encrypt(txt1.get().encode(), encryptionKey)
+            password = encrypt(txt2.get().encode(), encryptionKey)
+
+            #update_fields = """ UPDATE vault set website = ?, username = ?, password = ? WHERE id = ?,(website,username,password,idd) """
+            update_fields = """ UPDATE vault SET website=?, username=?, password=? WHERE id=? """
+            cursor.execute(update_fields, (website, username, password, idd))
+            db.commit()
+            passwordVault()
+
+           # passwordVault()
+
+        btn = ctk.CTkButton(window, text="update", width=50, command=update)
+        btn.pack(pady=10)
+
     btn = ctk.CTkButton(window, text="Log out", width=50, command=logout)
    # btn.configure(background="red", foreground="white")
     btn.grid(row=0,column=4, pady=10)
@@ -442,8 +481,6 @@ def passwordVault():
             if (len(array) == 0 ):
                 break
 
-
-
             lbl = ctk.CTkLabel(window, text=(decrypt(array[i][1], encryptionKey)), font=("Helvetica", 14))
             lbl.grid(column=0, row=(i+3))
             #print ((decrypt(array[i][1], encryptionKey)))
@@ -452,10 +489,11 @@ def passwordVault():
             lbl = ctk.CTkLabel(window, text=(decrypt(array[i][3], encryptionKey)), font=("Helvetica", 14))
             lbl.grid(column=2, row=(i+3), padx=(0, 20))
 
-            #btn = ctk.CTkButton(window, text="edit", width=50, command=partial(editEntry, array[i][0]))
-            #btn.grid(column=4, row=i + 3, pady=20, padx=(0, 5))
+            btn = ctk.CTkButton(window, text="edit", width=50, command=partial(editEntry, array[i][0]))
+            btn.grid(column=4, row=i + 3, pady=20, padx=(0, 5))
 
             btn = ctk.CTkButton(window, text="Delete",width=50, command= partial(removeEntry,array[i][0]))
+            #btn.configure(bg="red")
             btn.grid(column=5, row=i+3, pady=20, padx=(0, 5))
 
            # btn = Button(window, text="Edit", command= partial(removeEntry,array[i][0]))
