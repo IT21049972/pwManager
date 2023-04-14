@@ -1,27 +1,28 @@
-import sqlite3
-import hashlib
-import uuid
-import pyperclip
 import base64
-from random import choice, randint, shuffle
 import hashlib
-import requests
+import sqlite3
+import uuid
+from functools import partial
+from random import choice, randint, shuffle
+from tkinter import *  # pylint: disable=(unused-wildcard-import)
+from tkinter import messagebox, simpledialog
+
 import customtkinter as ctk
+import pyperclip
+import requests
+from cryptography.fernet import Fernet
+from cryptography.hazmat.backends import default_backend
 #from build.build import gui
 #import build/build/gui.py
-import os
+#import os
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.hazmat.backends import default_backend
-from cryptography.fernet import Fernet
-from cProfile import label
-from tkinter import messagebox
-from tkinter import *
-from tkinter import simpledialog
-from functools import partial
+
+#from cProfile import label
+
 
 backend = default_backend()
-salt = b'233'
+salt = b'233' #pylint: disable=invalid-name
 
 kdf = PBKDF2HMAC(
     algorithm=hashes.SHA256,
@@ -31,12 +32,14 @@ kdf = PBKDF2HMAC(
     backend=backend
 )
 
-encryptionKey = 0
+encryptionKey = 0 #pylint: disable=invalid-name
 
 def encrypt(message: bytes, key: bytes) -> bytes:
+    """ encrypts a given message using fernet symmetric alg"""
     return Fernet(key).encrypt(message)
 
 def decrypt(message: bytes, token: bytes) -> bytes:
+    """ decrypts a given message using fernet symmetric alg"""
     return Fernet(token).decrypt(message)
 
 #db
@@ -59,7 +62,7 @@ username TEXT NOT NULL,
  password TEXT NOT NULL );
 """)
 
-def popUp(text):
+def popUp(text):  #pylint: disable=invalid-name
     answer = simpledialog.askstring("Input string", text)
     return answer
     #print(answer)
@@ -69,7 +72,7 @@ def popUp(text):
 window = ctk.CTk()
 window.title("Password Vault")
 
-def hashPassword(input):
+def hashPassword(input): #pylint: disable=invalid-name
     hash = hashlib.sha256(input)
     hash = hash.hexdigest()
 
@@ -78,8 +81,8 @@ def hashPassword(input):
 
 def firstScreen():
     window.geometry("250x150")
-    for widget in window.winfo_children():  # when we switch from the loginscreen function to the password vault function
-        widget.destroy()
+    for widget in window.winfo_children():  # when we switch from the loginscreen
+        widget.destroy()                    # function to the password vault function
     lbl = Label(window, text="Create master password")
     lbl.config(anchor=CENTER)
     lbl.pack()
@@ -98,7 +101,7 @@ def firstScreen():
     lbl2 = Label(window)
     lbl2.pack()
 
-    def savePassword():
+    def savePassword(): #pylint: disable=invalid-name
         if txt.get() == txt1.get():
             sql = "DELETE FROM masterpassword WHERE id=1"
             cursor.execute(sql)
@@ -112,7 +115,7 @@ def firstScreen():
             file.write("Recovery Key: " + key)
             file.close
 
-            recoveryKey = hashPassword(key.encode('utf-8'))
+            recoveryKey = hashPassword(key.encode('utf-8')) #pylint: disable=invalid-name
 
             global encryptionKey
            # x="Abcd1234"
@@ -124,7 +127,7 @@ def firstScreen():
 
             recoveryScreen(key)
         else:
-            lbl2.config(text="Passwords do no match");
+            lbl2.config(text="Passwords do no match")
         #print("test")
 
 
@@ -166,7 +169,7 @@ def recoveryScreen(key):
 
 
 
-def resetScreen():
+def resetScreen(): #pylint: disable=invalid-name
     for widget in window.winfo_children():
         widget.destroy()
 
@@ -185,12 +188,13 @@ def resetScreen():
     lbl1.pack(pady=5)
 
 
-    def getrecoveryKey():
-        recoveryKeyCheck = hashPassword(str(txt.get()).encode('utf-8'))
-        cursor.execute("SELECT * FROM masterpassword where id=1 AND recoveryKey = ?",[(recoveryKeyCheck)])
+    def getrecoveryKey(): #pylint: disable=invalid-name
+        recoveryKeyCheck = hashPassword(str(txt.get()).encode('utf-8')) #pylint: disable=invalid-name
+        cursor.execute("SELECT * FROM masterpassword where id=1 AND recoveryKey = ?",
+                       [(recoveryKeyCheck)])
         return cursor.fetchall()
 
-    def checkRecoveryKey():
+    def checkRecoveryKey(): #pylint: disable=invalid-name
         checked = getrecoveryKey()
 
         if checked:
@@ -204,7 +208,7 @@ def resetScreen():
     btn.pack(pady=10)
 
 
-def loginScreen():
+def loginScreen(): #pylint: disable=invalid-name
     for widget in window.winfo_children():
         widget.destroy()
 
@@ -221,7 +225,7 @@ def loginScreen():
     lbl1 = Label(window)
     lbl1.pack()
 
-    def getMasterPassword():
+    def getMasterPassword(): #pylint: disable=invalid-name
         checkHashedPassword = hashPassword(txt.get().encode("utf-8"))
         global encryptionKey
         #test="testt"
@@ -230,11 +234,12 @@ def loginScreen():
         print(encryptionKey)
        # kdf.reset()  # Reset the kdf instance before deriving a new key
 
-        cursor.execute("SELECT * FROM masterpassword where id=1 AND password= ?", [(checkHashedPassword)])
+        cursor.execute("SELECT * FROM masterpassword where id=1 AND password= ?",
+                       [(checkHashedPassword)])
         print(checkHashedPassword)
         return cursor.fetchall()
 
-    def checkPassword():
+    def check_Password(): #pylint: disable=invalid-name
         #password = "Test"
         match = getMasterPassword()
 
@@ -250,10 +255,10 @@ def loginScreen():
             lbl1.config(text="Wrong password")
                   #  print("Test")
 
-    def resetPassword():
+    def reset_Password(): #pylint: disable=invalid-name
         resetScreen()
 
-    btn = ctk.CTkButton(window, text="Submit", command=checkPassword)
+    btn = ctk.CTkButton(window, text="Submit", command=check_Password)
     btn.pack(pady=10)
 
    # btn = ctk.CTkButton(window, text="Reset",width=50, command=resetPassword)
@@ -261,13 +266,12 @@ def loginScreen():
 
 
 def passwordVault():
-
-    for widget in window.winfo_children():         # when we switch from the loginscreen function to the password vault function
-        widget.destroy()    # it will destroy all the text if we dont do it it will keep all the text on stack
+    for widget in window.winfo_children():
+        widget.destroy()
 
     def addEntry():
         window.geometry("350x300")
-        for widget in window.winfo_children():  # when we switch from the loginscreen function to the password vault function
+        for widget in window.winfo_children():
             widget.destroy()
 
         lbl = Label(window, text="Website")
@@ -322,9 +326,21 @@ def passwordVault():
             txt2.insert(0, password)
 
         def insert():
-            website = encrypt(txt.get().encode(), encryptionKey)
-            username = encrypt(txt1.get().encode(), encryptionKey)
-            password = encrypt(txt2.get().encode(), encryptionKey)
+            website = txt.get().strip()
+            username = txt1.get().strip()
+            password = txt2.get().strip()
+            if not website:
+                messagebox.showerror("Error", "Missing fields ")
+                return
+            if not username:
+                messagebox.showerror("Error", "Missing fields ")
+                return
+            if not password:
+                messagebox.showerror("Error", "Missing fields ")
+                return
+            website = encrypt(website.encode(), encryptionKey)
+            username = encrypt(username.encode(), encryptionKey)
+            password = encrypt(password.encode(), encryptionKey)
 
             insert_fields = """ INSERT INTO vault(website,username,password) VALUES(?,?,?) """
 
@@ -334,28 +350,31 @@ def passwordVault():
             passwordVault()
 
 
-        def checkBreach():
-           passs = txt2.get()
-           hash_password = hashlib.sha1(passs.encode()).hexdigest().upper()
-           prefix = hash_password[:5]
-           url = f"https://api.pwnedpasswords.com/range/{prefix}"
-           try:
-               response = requests.get(url)
-               suffixes = [line.split(":")[0] for line in response.text.splitlines()]
-               if hash_password[5:] in suffixes:
-                   result = messagebox.askyesno("Question", "This password has previously appeared in a data breach, Are you sure you want to use this ")
-                   if result == True:
+        def check_Breach():
+            passs = txt2.get()
+            hash_password = hashlib.sha1(passs.encode()).hexdigest().upper()
+            prefix = hash_password[:5]
+            url = f"https://api.pwnedpasswords.com/range/{prefix}"
+            try:
+                response = requests.get(url,timeout=30)
+                suffixes = [line.split(":")[0] for line in response.text.splitlines()]
+                if hash_password[5:] in suffixes:
+                    result = messagebox.askyesno("Question",
+                                                 "This password has previously appeared in a data breach,"
+                                                 " Are you sure you want to use this ")
+                    if result is True:
                        insert()
-               else:
-                   insert()
-           except requests.exceptions.RequestException as e:
+                else:
+                    insert()
+            except requests.exceptions.RequestException as request_exception: #pylint: disable=(unused-variable)
              #network con issuee
-            messagebox.showerror("Error", "Error connecting to API: {str(e)}")
+             messagebox.showerror("Error",
+                                  "Error connecting to API: {str(request_exception)}")
 
         btn = ctk.CTkButton(window, text="generate password", command=gen_pass)
         btn.pack(pady=10)
 
-        btn = ctk.CTkButton(window, text="Submit",width=50, command=checkBreach)
+        btn = ctk.CTkButton(window, text="Submit",width=50, command=check_Breach)
         btn.pack(pady=10)
 
         btn = ctk.CTkButton(window, text=" << back",width=50, command=passwordVault)
@@ -369,7 +388,7 @@ def passwordVault():
        #passwordVault()
 
 
-    def removeEntry(input):
+    def remove_entry(input):
         cursor.execute("DELETE FROM vault WHERE id= ?", (input,))
         db.commit()
 
@@ -388,32 +407,37 @@ def passwordVault():
     btn.grid(row=1,column=1, pady=10)
 
     def logout():
-        #for widget in window.winfo_children():  # when we switch from the loginscreen function to the password vault function
+        #for widget in window.winfo_children():
+        # when we switch from the loginscreen function to the password vault function
          #   widget.destroy()
 
             result = messagebox.askyesno("Question", "Do you want to log out?")
 
             # check the user's response and display a message accordingly
-            if result == True:
-               # for widget in window.winfo_children():  # when we switch from the loginscreen function to the password vault function
+            if result is True:
+               # for widget in window.winfo_children():
+               # when we switch from the loginscreen
+               # function to the password vault function
                 #    widget.destroy()
                # loginScreen()
-                window.after(1000,  loginScreen())
+                window.after(1000,  window.destroy())
                # loginScreen()
 
                 #result == False
                # messagebox.showinfo("Result", "You clicked Yes!")
             #else:
-             #   for widget in window.winfo_children():  # when we switch from the loginscreen function to the password vault function
+             #   for widget in window.winfo_children():
+        # when we switch from the loginscreen function to
+    # the password vault function
               #      widget.destroy()
                 #passwordVault()
                 #messagebox.showinfo("Result", "You clicked No!")
 
     #  loginScreen()
 
-    def editEntry(idd):
-        window.geometry("350x200")
-        for widget in window.winfo_children():  # when we switch from the loginscreen function to the password vault function
+    def edit_entry(idd):
+        window.geometry("350x300")
+        for widget in window.winfo_children():
             widget.destroy()
 
         lbl = Label(window, text="Website")
@@ -442,19 +466,31 @@ def passwordVault():
         lbl3.pack()
 
         def update():
-            website = encrypt(txt.get().encode(), encryptionKey)
-            username = encrypt(txt1.get().encode(), encryptionKey)
-            password = encrypt(txt2.get().encode(), encryptionKey)
-
-            #update_fields = """ UPDATE vault set website = ?, username = ?, password = ? WHERE id = ?,(website,username,password,idd) """
+            website = txt.get().strip()
+            username = txt1.get().strip()
+            password = txt2.get().strip()
+            if not website:
+                messagebox.showerror("Error", "Missing fields ")
+                return
+            if not username:
+                messagebox.showerror("Error", "Missing fields ")
+                return
+            if not password:
+                messagebox.showerror("Error", "Missing fields ")
+                return
+            website = encrypt(website.encode(), encryptionKey)
+            username = encrypt(username.encode(), encryptionKey)
+            password = encrypt(password.encode(), encryptionKey)
             update_fields = """ UPDATE vault SET website=?, username=?, password=? WHERE id=? """
             cursor.execute(update_fields, (website, username, password, idd))
             db.commit()
             passwordVault()
 
-           # passwordVault()
+        # passwordVault()
 
         btn = ctk.CTkButton(window, text="update", width=50, command=update)
+        btn.pack(pady=10)
+        btn = ctk.CTkButton(window, text=" << cancel",width=50, command=passwordVault)
         btn.pack(pady=10)
 
     btn = ctk.CTkButton(window, text="Log out", width=50, command=logout)
@@ -472,7 +508,7 @@ def passwordVault():
 
     cursor.execute("SELECT * FROM vault")
 
-    if (cursor.fetchall() != None):
+    if cursor.fetchall() is not None:
         i = 0
         while True:
             cursor.execute("SELECT * FROM vault")
@@ -481,18 +517,29 @@ def passwordVault():
             if (len(array) == 0 ):
                 break
 
-            lbl = ctk.CTkLabel(window, text=(decrypt(array[i][1], encryptionKey)), font=("Helvetica", 14))
+            lbl = ctk.CTkLabel(window,
+                               text=(decrypt(array[i][1], encryptionKey)),
+                               font=("Helvetica", 14))
             lbl.grid(column=0, row=(i+3))
             #print ((decrypt(array[i][1], encryptionKey)))
-            lbl = ctk.CTkLabel(window, text=(decrypt(array[i][2], encryptionKey)), font=("Helvetica", 14))
+
+            lbl = ctk.CTkLabel(window,
+                               text=(decrypt(array[i][2], encryptionKey)),
+                               font=("Helvetica", 14))
             lbl.grid(column=1, row=(i+3))
-            lbl = ctk.CTkLabel(window, text=(decrypt(array[i][3], encryptionKey)), font=("Helvetica", 14))
+
+
+            lbl = ctk.CTkLabel(window,
+                               text=(decrypt(array[i][3], encryptionKey)),
+                               font=("Helvetica", 14))
             lbl.grid(column=2, row=(i+3), padx=(0, 20))
 
-            btn = ctk.CTkButton(window, text="edit", width=50, command=partial(editEntry, array[i][0]))
+            btn = ctk.CTkButton(window, text="edit", width=50,
+                                command=partial(edit_entry, array[i][0]))
             btn.grid(column=4, row=i + 3, pady=20, padx=(0, 5))
 
-            btn = ctk.CTkButton(window, text="Delete",width=50, command= partial(removeEntry,array[i][0]))
+            btn = ctk.CTkButton(window, text="Delete",width=50,
+                                command= partial(remove_entry,array[i][0]))
             #btn.configure(bg="red")
             btn.grid(column=5, row=i+3, pady=20, padx=(0, 5))
 
@@ -502,7 +549,7 @@ def passwordVault():
             i=i+1
 
             cursor.execute("SELECT * FROM vault")
-            if(len(cursor.fetchall()) <= i):
+            if len(cursor.fetchall()) <= i:
                 break
 
 
@@ -511,8 +558,5 @@ if cursor.fetchall():
     loginScreen()
 else:
     firstScreen()
-
-#loginScreen()
-#firstScreen()
 
 window.mainloop()
