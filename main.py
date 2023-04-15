@@ -6,7 +6,8 @@ from functools import partial
 from random import choice, randint, shuffle
 from tkinter import *  # pylint: disable=(unused-wildcard-import)
 from tkinter import messagebox, simpledialog
-
+from ttkbootstrap.constants import *
+import ttkbootstrap as tb
 import customtkinter as ctk
 import pyperclip
 import requests
@@ -69,8 +70,10 @@ def popUp(text):  #pylint: disable=invalid-name
 
 #popUp("What's your name")
 
-window = ctk.CTk()
-window.title("Password Vault")
+root = tb.Window(themename="solar")
+root.title("Password Vault")
+
+
 
 def hashPassword(input): #pylint: disable=invalid-name
     hash = hashlib.sha256(input)
@@ -80,25 +83,25 @@ def hashPassword(input): #pylint: disable=invalid-name
 
 
 def firstScreen():
-    window.geometry("250x150")
-    for widget in window.winfo_children():  # when we switch from the loginscreen
+    root.geometry("550x150")
+    for widget in root.winfo_children():  # when we switch from the loginscreen
         widget.destroy()                    # function to the password vault function
-    lbl = Label(window, text="Create master password")
+    lbl = Label(root, text="Create master password")
     lbl.config(anchor=CENTER)
     lbl.pack()
 
-    txt = Entry(window, width=20, show="*")
+    txt = Entry(root, width=20, show="*")
     txt.pack()
     txt.focus()
 
-    lbl1 = Label(window, text = "Re enter password")
+    lbl1 = Label(root, text = "Re enter password")
     lbl1.pack(pady=5)
 
-    txt1 = Entry(window, width=20, show="*")
+    txt1 = Entry(root, width=20, show="*")
     txt1.pack()
     txt1.focus()
 
-    lbl2 = Label(window)
+    lbl2 = Label(root)
     lbl2.pack()
 
     def savePassword(): #pylint: disable=invalid-name
@@ -131,59 +134,59 @@ def firstScreen():
         #print("test")
 
 
-    btn = ctk.CTkButton(window, text="Submit",width=50, command=savePassword)
+    btn = tb.Button(root,bootstyle="success", text="Submit", width=50, command=savePassword)
     btn.pack(pady=10)
 
 def recoveryScreen(key):
-    for widget in window.winfo_children():
+    for widget in root.winfo_children():
         widget.destroy()
 
-    window.geometry("250x150")
+    root.geometry("250x350")
 
-    lbl = Label(window, text="SAVE this key to recover account")
+    lbl = Label(root, text="SAVE this key to recover account")
     lbl.config(anchor=CENTER)
     lbl.pack()
 
-    lbl1 = Label(window, text=key)
+    lbl1 = Label(root, text=key)
     lbl1.config(anchor=CENTER)
     lbl1.pack(pady=5)
 
-   # txt1 = Entry(window, width=20, show="*")
+   # txt1 = Entry(root, width=20, show="*")
     #txt1.pack()
     #txt1.focus()
 
-   # lbl2 = Label(window)
+   # lbl2 = Label(root)
     #lbl2.pack()
 
     def copyKey():
         pyperclip.copy(lbl1.cget("text"))
 
-    btn = Button(window, text="Copy", command=copyKey)
+    btn = Button(root, text="Copy", command=copyKey)
     btn.pack(pady=10)
 
     def done():
         passwordVault()
 
-    btn = Button(window, text="Done", command=done)
+    btn = Button(root, text="Done", command=done)
     btn.pack(pady=10)
 
 
 
 def resetScreen(): #pylint: disable=invalid-name
-    for widget in window.winfo_children():
+    for widget in root.winfo_children():
         widget.destroy()
 
-    window.geometry("250x150")
+    root.geometry("250x350")
 
-    lbl = Label(window, text="Enter recovery key")
+    lbl = Label(root, text="Enter recovery key")
     lbl.config(anchor=CENTER)
     lbl.pack()
 
-    txt = Entry(window, width=20)
+    txt = Entry(root, width=20)
     txt.pack()
     txt.focus()
 
-    lbl1 = Label(window)
+    lbl1 = Label(root)
     lbl1.config(anchor=CENTER)
     lbl1.pack(pady=5)
 
@@ -204,25 +207,34 @@ def resetScreen(): #pylint: disable=invalid-name
             lbl1.config(text="Wrong key ")
 
 
-    btn = Button(window, text="Check Key", command=checkRecoveryKey)
+    btn = Button(root, text="Check Key", command=checkRecoveryKey)
     btn.pack(pady=10)
 
 
 def loginScreen(): #pylint: disable=invalid-name
-    for widget in window.winfo_children():
+    for widget in root.winfo_children():
         widget.destroy()
 
-    window.geometry("350x150")
+    root.geometry("350x150")
+    salt = b'233'  # pylint: disable=invalid-name
 
-    lbl = Label(window, text="Enter master password")
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256,
+        length=32,
+        salt=salt,
+        iterations=100000,
+        backend=backend
+    )
+
+    lbl = Label(root, text="Enter master password")
     lbl.config(anchor=CENTER)
     lbl.pack()
 
-    txt = ctk.CTkEntry(window, width=200, show="*")
+    txt = tb.Entry(root, width=100, show="*")
     txt.pack()
     txt.focus()
 
-    lbl1 = Label(window)
+    lbl1 = Label(root)
     lbl1.pack()
 
     def getMasterPassword(): #pylint: disable=invalid-name
@@ -251,52 +263,54 @@ def loginScreen(): #pylint: disable=invalid-name
            # print("Right password")
         else:
             #kdf.reset()
-            txt.delete(0, 'end') #deletes incorrect input
+            #txt.delete(0, 'end') #deletes incorrect input
             lbl1.config(text="Wrong password")
+            messagebox.showerror("Error", "Incorrect password")
+            loginScreen()
                   #  print("Test")
 
     def reset_Password(): #pylint: disable=invalid-name
         resetScreen()
 
-    btn = ctk.CTkButton(window, text="Submit", command=check_Password)
+    btn = tb.Button(root, text="Submit", command=check_Password)
     btn.pack(pady=10)
 
-   # btn = ctk.CTkButton(window, text="Reset",width=50, command=resetPassword)
+   # btn = tb.Button(root, text="Reset",width=50, command=resetPassword)
     #btn.pack(pady=10)
 
 
 def passwordVault():
-    for widget in window.winfo_children():
+    for widget in root.winfo_children():
         widget.destroy()
 
     def addEntry():
-        window.geometry("350x300")
-        for widget in window.winfo_children():
+        root.geometry("350x400")
+        for widget in root.winfo_children():
             widget.destroy()
 
-        lbl = Label(window, text="Website")
+        lbl = Label(root, text="Website")
         lbl.config(anchor=CENTER)
         lbl.pack()
 
-        txt = Entry(window, width=20)
+        txt = Entry(root, width=20)
         txt.pack()
         txt.focus()
 
-        lbl1 = Label(window, text="Username")
+        lbl1 = Label(root, text="Username")
         lbl1.pack(pady=5)
 
-        txt1 = Entry(window, width=20)
+        txt1 = Entry(root, width=20)
         txt1.pack()
         txt1.focus()
 
-        lbl2 = Label(window, text="Password" )
+        lbl2 = Label(root, text="Password" )
         lbl2.pack(pady=5)
 
-        txt2 = Entry(window, width=20)
+        txt2 = Entry(root, width=20)
         txt2.pack()
         txt2.focus()
 
-        lbl3 = Label(window)
+        lbl3 = Label(root)
         lbl3.pack()
 
        # website = encrypt(txt.get().encode(), encryptionKey)
@@ -371,13 +385,13 @@ def passwordVault():
              messagebox.showerror("Error",
                                   "Error connecting to API: {str(request_exception)}")
 
-        btn = ctk.CTkButton(window, text="generate password", command=gen_pass)
+        btn = tb.Button(root, text="generate password", command=gen_pass)
         btn.pack(pady=10)
 
-        btn = ctk.CTkButton(window, text="Submit",width=50, command=check_Breach)
+        btn = tb.Button(root, text="Submit",width=20, command=check_Breach)
         btn.pack(pady=10)
 
-        btn = ctk.CTkButton(window, text=" << back",width=50, command=passwordVault)
+        btn = tb.Button(root, text=" << back",width=20, command=passwordVault)
         btn.pack(pady=10)
 
         #wbsite = txt.get()
@@ -394,20 +408,21 @@ def passwordVault():
 
         passwordVault()
 
-    window.geometry("750x450")
+    root.geometry("1050x450")
     # popUp("What's your name")
 
-    lbl = ctk.CTkLabel(window, text = "Password Vault",font=ctk.CTkFont(size=30, weight="bold" ))
+    lbl = tb.Label(root, text = "Password Vault",font=("Helvetia", 30 ),
+                   bootstyle ="default")
     lbl.grid(row=0,column=1)
     #lbl.pack(padx=10, pady=(40, 20))
 
 
 
-    btn = ctk.CTkButton(window, text="Add +", command=addEntry)
+    btn = tb.Button(root, text="Add +", command=addEntry)
     btn.grid(row=1,column=1, pady=10)
 
     def logout():
-        #for widget in window.winfo_children():
+        #for widget in root.winfo_children():
         # when we switch from the loginscreen function to the password vault function
          #   widget.destroy()
 
@@ -415,18 +430,18 @@ def passwordVault():
 
             # check the user's response and display a message accordingly
             if result is True:
-               # for widget in window.winfo_children():
+               # for widget in root.winfo_children():
                # when we switch from the loginscreen
                # function to the password vault function
                 #    widget.destroy()
                # loginScreen()
-                window.after(1000,  window.destroy())
+                root.after(1000, loginScreen())  #root.destroy())
                # loginScreen()
 
                 #result == False
                # messagebox.showinfo("Result", "You clicked Yes!")
             #else:
-             #   for widget in window.winfo_children():
+             #   for widget in root.winfo_children():
         # when we switch from the loginscreen function to
     # the password vault function
               #      widget.destroy()
@@ -436,33 +451,33 @@ def passwordVault():
     #  loginScreen()
 
     def edit_entry(idd):
-        window.geometry("350x300")
-        for widget in window.winfo_children():
+        root.geometry("350x350")
+        for widget in root.winfo_children():
             widget.destroy()
 
-        lbl = Label(window, text="Website")
+        lbl = Label(root, text="Website")
         lbl.config(anchor=CENTER)
         lbl.pack()
 
-        txt = Entry(window, width=20)
+        txt = Entry(root, width=20)
         txt.pack()
         txt.focus()
 
-        lbl1 = Label(window, text="Username")
+        lbl1 = Label(root, text="Username")
         lbl1.pack(pady=5)
 
-        txt1 = Entry(window, width=20)
+        txt1 = Entry(root, width=20)
         txt1.pack()
         txt1.focus()
 
-        lbl2 = Label(window, text="Password")
+        lbl2 = Label(root, text="Password")
         lbl2.pack(pady=5)
 
-        txt2 = Entry(window, width=20)
+        txt2 = Entry(root, width=20)
         txt2.pack()
         txt2.focus()
 
-        lbl3 = Label(window)
+        lbl3 = Label(root)
         lbl3.pack()
 
         def update():
@@ -488,23 +503,26 @@ def passwordVault():
 
         # passwordVault()
 
-        btn = ctk.CTkButton(window, text="update", width=50, command=update)
+        btn = tb.Button(root, text="update", width=50, command=update)
         btn.pack(pady=10)
-        btn = ctk.CTkButton(window, text=" << cancel",width=50, command=passwordVault)
+        btn = tb.Button(root, text=" << cancel",width=50, command=passwordVault)
         btn.pack(pady=10)
 
-    btn = ctk.CTkButton(window, text="Log out", width=50, command=logout)
+    btn = tb.Button(root, text="Log out",bootstyle="danger", width=10, command=logout)
    # btn.configure(background="red", foreground="white")
-    btn.grid(row=0,column=4, pady=10)
+    btn.grid(row=0,column=5, pady=10)
 
-    lbl = ctk.CTkLabel(window, text="Website",font=ctk.CTkFont(size=16, weight="bold" ))
-    lbl.grid(row=2, column=0, padx=80)
+    lblw = tb.Label(root, text="Website",font=("Helvetica",10 ),
+                   bootstyle ="default")
+    lblw.grid(row=2, column=0, padx=80)
 
-    lbl = Label(window, text="Username",font=ctk.CTkFont(size=16, weight="bold" ))
-    lbl.grid(row=2, column=1, padx=80)
+    lblu = tb.Label(root, text="Username",font=("Helvetica",10),
+                bootstyle ="default")
+    lblu.grid(row=2, column=1, padx=80)
 
-    lbl = Label(window, text="Password",font=ctk.CTkFont(size=16, weight="bold" ))
-    lbl.grid(row=2, column=2, padx=80)
+    lblp = tb.Label(root, text="Password",font=("Helvetica",10),
+                bootstyle ="default")
+    lblp.grid(row=2, column=2, padx=80)
 
     cursor.execute("SELECT * FROM vault")
 
@@ -517,33 +535,33 @@ def passwordVault():
             if (len(array) == 0 ):
                 break
 
-            lbl = ctk.CTkLabel(window,
+            lbl1 = tb.Label(root,
                                text=(decrypt(array[i][1], encryptionKey)),
                                font=("Helvetica", 14))
-            lbl.grid(column=0, row=(i+3))
+            lbl1.grid(column=0, row=(i+3))
             #print ((decrypt(array[i][1], encryptionKey)))
 
-            lbl = ctk.CTkLabel(window,
+            lbl2 = tb.Label(root,
                                text=(decrypt(array[i][2], encryptionKey)),
                                font=("Helvetica", 14))
-            lbl.grid(column=1, row=(i+3))
+            lbl2.grid(column=1, row=(i+3))
 
 
-            lbl = ctk.CTkLabel(window,
+            lbl3 = tb.Label(root,
                                text=(decrypt(array[i][3], encryptionKey)),
                                font=("Helvetica", 14))
-            lbl.grid(column=2, row=(i+3), padx=(0, 20))
+            lbl3.grid(column=2, row=(i+3), padx=(0, 20))
 
-            btn = ctk.CTkButton(window, text="edit", width=50,
+            btn = tb.Button(root, text="edit", width=10,
                                 command=partial(edit_entry, array[i][0]))
             btn.grid(column=4, row=i + 3, pady=20, padx=(0, 5))
 
-            btn = ctk.CTkButton(window, text="Delete",width=50,
+            btn = tb.Button(root, text="Delete",bootstyle="danger",width=10,
                                 command= partial(remove_entry,array[i][0]))
             #btn.configure(bg="red")
             btn.grid(column=5, row=i+3, pady=20, padx=(0, 5))
 
-           # btn = Button(window, text="Edit", command= partial(removeEntry,array[i][0]))
+           # btn = Button(root, text="Edit", command= partial(removeEntry,array[i][0]))
             #btn.grid(column=5, row=i+3, pady=20)
 
             i=i+1
@@ -559,4 +577,4 @@ if cursor.fetchall():
 else:
     firstScreen()
 
-window.mainloop()
+root.mainloop()
